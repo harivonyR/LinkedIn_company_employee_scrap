@@ -1,0 +1,1 @@
+query = "intext:\"Apple\" site:linkedin.com -inurl:posts/ -inurl:company/ -inurl:video/ -inurl:pulse/ -inurl:pulse/ inurl:in/"
