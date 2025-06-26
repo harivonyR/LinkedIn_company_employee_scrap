@@ -3,40 +3,47 @@
 Created on Tue Jun 24 20:42:08 2025
 
 @author: Harivony RATEFIARISON
+
 """
 
-# LOAD API KEY
+# Load API KEY
+from credential import x_api_key  
 
-from credential import x_api_key
-
+# ---------------------------
 #
+# 0 - Get company employee LinkedIn profile links
 #
-# 0 - BUILD DORK (syntax)
-#
-# 
-
-# Dork : "intext:\'Apple Inc.\' inurl:in site:linkedin.com -inurl:posts"
-
-# intext:\'Apple Inc.\' 
-#site:linkedin.com 
-# inurl:in 
-#-inurl:posts"
+# ---------------------------
 
 
+# Google dork are used to performe precise search in the google referenced page database.
+# It takes advantages of the Google supercalculation power.
+# Dork sample :
+#   "intext:'Apple Inc.' inurl:in site:linkedin.com -inurl:posts"
+
+# Dork syntax explained :
+# intext:'Apple Inc.'   → find page that contain exactly 'Apple Inc.'
+# site:linkedin.com     → limit the search in LinkedIn domain only
+# inurl:in              → Profile link must contain '/in/' (avoid link that is not a link)
+# -inurl:posts          → Exclude of the search all LinkedIn posts link 
+
+# Result : Get list of Apple Inc. result only on LinkedIn
+
+
+# ---------------------------
 #
+# I - Get company employee LinkedIn profile links
 #
-# I - Get company employee linkedIn profil link List 
-#
-# 
+# ---------------------------
 
 import requests
 
-url = "https://piloterr.com/api/v2/google/search"
+url = "https://piloterr.com/api/v2/google/search"  # API de recherche Google de Piloterr
 
-
+# Requête à envoyer à l'API
 payload = {
-    "query": "intext:\'Apple Inc.\' inurl:in site:linkedin.com -inurl:posts",
-    "page" : 1
+    "query": "intext:'Apple Inc.' inurl:in site:linkedin.com -inurl:posts",
+    "page": 1  # Page 1 des résultats Google
 }
 
 headers = {
@@ -44,133 +51,57 @@ headers = {
     "Content-Type": "application/json"
 }
 
+# Envoi de la requête POST à l'API
 response = requests.request("POST", url, json=payload, headers=headers)
 
+# Affichage brut de la réponse JSON
 print("------------")
 print(f"1) google search response : {response.text}")
 
 
+# ---------------------------
 #
+# II - Extraire un lien de profil
 #
-# II - Get profil info 
-#
-# 
-
-# 1 - get link
-
-# Local json load / server temporary anavalaible
+# ---------------------------
+"""
+# local load
 import json
+
+# Chargement d’un fichier local pour test hors ligne
 with open("input/google_search_api_response.json", "r", encoding="utf-8") as f:
     data = json.load(f)
-    
-#data = response.json()
-result_organic = data['organic_results']       # result_organic is the search result key that contain profile link list
-profil_link = result_organic[0]['link']        # sample profile link
+"""
+
+data = response.json()
+# Récupération des résultats organiques de la recherche
+result_organic = data['organic_results']
+
+# Récupération d’un lien de profil (ex: https://www.linkedin.com/in/...)
+profil_link = result_organic[0]['link']
 
 print("------------")
 print(f"2) sample profile link : {profil_link}")
 
 
-# 2 - fetch profile info using API
-
-
+# ---------------------------
 #
+# III - Récupérer les infos du profil LinkedIn
 #
-# III - Get profil info 
-#
-# 
+# ---------------------------
 
-import requests
-
+# Requête vers l’API Piloterr pour obtenir les détails du profil
 url = "https://piloterr.com/api/v2/linkedin/advanced/profile/info"
 
 headers = {
     "x-api-key": x_api_key
 }
 
-querystring = {"query" : profil_link} 
+querystring = {"query": profil_link}  # Le lien du profil comme paramètre
 
+# Envoi de la requête GET
 response = requests.request("GET", url, headers=headers, params=querystring)
 
+# Affichage des informations détaillées du profil
 print("------------")
 print(f"3) sample profile info : {response.json()}")
-
-#
-#
-# IV - LOOP process - merge data (this must be mooved into an entire .py file )
-#
-# 
-
-# import package
-import requests
-from credential import x_api_key
-
-# create global variable
-X_API_KEY = x_api_key
-PAGE_RANGE = 2                      # define the number of google search page to scrap
-COMPANY = "Apple Inc."
-
-# define function
-def get_search_result(page=1, company= COMPANY):
-    
-    url = "https://piloterr.com/api/v2/google/search"
-
-    payload = {
-        "query": f"intext:\'{COMPANY}\' inurl:in site:linkedin.com -inurl:posts",
-        "page" : page
-    }
-
-    headers = {
-        "x-api-key": X_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    response = requests.request("POST", url, json=payload, headers=headers)
-    data = response.json()
-    result_organic = data['organic_results'] 
-    
-    return result_organic
-
-def get_profile_info(profile_link):
-    url = "https://piloterr.com/api/v2/linkedin/advanced/profile/info"
-
-    headers = {
-        "x-api-key": X_API_KEY
-    }
-
-    querystring = {"query" : profile_link} 
-
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    return response.json()
-
-# iterrate google search page
-def main():
-    
-    profile_info = []
-    
-    for i in range(PAGE_RANGE) :
-        
-        profile_info_dataset = {}
-        
-        try :
-            result_organic = get_search_result(page=i,company= COMPANY)
-        except :
-            print("exception on search !")
-        
-        if result_organic != None :
-            for j in range(len(result_organic)) :
-                try :
-                    profile_data = get_profile_info(page=i,company= COMPANY)
-                    profile_info_dataset.append(profile_data)
-                except e :
-                    print(f"error : {e}")
-        else :
-            print(f"page {}")
-    
-    profile_info.save("output/linkedin_dataset.json")
-
-
-
-
-
-
