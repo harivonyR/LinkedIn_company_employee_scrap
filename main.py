@@ -14,7 +14,7 @@ from credential import x_api_key
 
 # Global vars
 X_API_KEY = x_api_key
-PAGE_RANGE = 1
+PAGE_RANGE = 2
 COMPANY = "Apple Inc."
 
 def get_search_results(page=1, company=COMPANY, organic_results=True):
@@ -25,7 +25,7 @@ def get_search_results(page=1, company=COMPANY, organic_results=True):
     url = "https://piloterr.com/api/v2/google/search"
     
     payload = {
-        "query": f"intext:'{company}' inurl:in site:linkedin.com -inurl:posts",
+        "query": f"intext:\'{company}\' inurl:in site:linkedin.com -inurl:posts",
         "page": page
     }
     headers = {
@@ -61,7 +61,7 @@ def test():
     Pipeline line-by-line test
     """
     # Get search result
-    organic_results = get_search_results(page=1)
+    organic_results = get_search_results(page=2)
 
     # Get profile links
     profile_list = [r.get("link") for r in organic_results if r.get("link")]
@@ -79,11 +79,16 @@ def main():
     all_profiles = []
 
     for i in range(PAGE_RANGE):
+        
+        print(f"Page : {i+1}")                             # debug    
         try:
             results = get_search_results(page=i + 1)
 
             for result in results:
+                
                 link = result.get('link')
+                print(f"link : {link}")                    # debug
+                
                 if link:
                     try:
                         profile_data = get_profile_info(link)
@@ -100,4 +105,4 @@ def main():
 
 # Appel du pipeline
 if __name__ == "__main__":
-    main()
+    all_profiles = main()
