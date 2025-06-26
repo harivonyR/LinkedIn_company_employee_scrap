@@ -12,7 +12,7 @@ This project demonstrates how to use the [Piloterr API](https://piloterr.com/) t
 
 ---
 
-## 🔧 Requirements
+## Requirements
 
 - Python 3.7+
 - `requests` module
@@ -26,7 +26,7 @@ pip install requests
 
 ---
 
-## 📁 File structure
+##  File structure
 
 ```
 project/
@@ -40,7 +40,7 @@ project/
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 ### 1. Setup your API key
 Create a file named `credential.py`:
@@ -66,7 +66,7 @@ test()
 
 ---
 
-## ✏️ Customization
+## Customization
 
 - Modify `COMPANY` in `main.py` to change the target company.
 - Adjust `PAGE_RANGE` to fetch more pages from Google results.
@@ -74,6 +74,6 @@ test()
 
 ---
 
-## ⚠️ Legal note
+## Legal note
 
 This project is for **educational purposes**. Always check the legality and terms of service before scraping any website or using third-party APIs.

@@ -7,7 +7,7 @@ Created on Tue Jun 24 20:42:08 2025
 """
 
 # Load API KEY
-from credential import x_api_key  
+from credential import x_api_key
 
 # ---------------------------
 #
