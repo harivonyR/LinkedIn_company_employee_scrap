@@ -1,110 +1,103 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 24 20:42:08 2025
+Created on Thu Jun 26 12:58:48 2025
 
-@author: Harivony RATEFIARISON
+@author: BEST
+
+Loop scrap and merge data
+
 """
 
-# LOAD API KEY
-
+import json
+import requests
 from credential import x_api_key
 
-#
-#
-# 0 - BUILD DORK (syntax)
-#
-# 
+# Global vars
+X_API_KEY = x_api_key
+PAGE_RANGE = 1
+COMPANY = "Apple Inc."
 
-# Dork : "intext:\'Apple Inc.\' inurl:in site:linkedin.com -inurl:posts"
-
-# intext:\'Apple Inc.\' 
-#site:linkedin.com 
-# inurl:in 
-#-inurl:posts"
-
-
-#
-#
-# I - Get company employee linkedIn profil link List 
-#
-# 
-
-import requests
-
-url = "https://piloterr.com/api/v2/google/search"
-
-
-payload = {
-    "query": "intext:\'Apple Inc.\' inurl:in site:linkedin.com -inurl:posts",
-    "page" : 1
-}
-
-headers = {
-    "x-api-key": x_api_key,
-    "Content-Type": "application/json"
-}
-
-response = requests.request("POST", url, json=payload, headers=headers)
-
-print("------------")
-print(f"1) google search response : {response.text}")
-
-
-#
-#
-# II - Get profil info 
-#
-# 
-
-# 1 - get link
-
-# Local json load / server temporary anavalaible
-import json
-with open("input/google_search_api_response.json", "r", encoding="utf-8") as f:
-    data = json.load(f)
+def get_search_results(page=1, company=COMPANY, organic_results=True):
+    """
+    set organic_results=False if a raw response is needed
     
-#data = response.json()
-result_organic = data['organic_results']       # result_organic is the search result key that contain profile link list
-profil_link = result_organic[0]['link']        # sample profile link
+    """
+    url = "https://piloterr.com/api/v2/google/search"
+    
+    payload = {
+        "query": f"intext:'{company}' inurl:in site:linkedin.com -inurl:posts",
+        "page": page
+    }
+    headers = {
+        "x-api-key": X_API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.post(url, json=payload, headers=headers)
+    
+    if organic_results:
+        return response.json().get('organic_results', [])
+    
+    else :
+        return response.json()
+    
+def get_profile_info(profile_link):
+    url = "https://piloterr.com/api/v2/linkedin/advanced/profile/info"
+    
+    headers = {
+        "x-api-key": X_API_KEY
+    }
+    querystring = {"query": profile_link}
+    
+    response = requests.get(url, headers=headers, params=querystring)
+    return response.json()
 
-print("------------")
-print(f"2) sample profile link : {profil_link}")
+def save_json(data, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
+def test():
+    """
+    Pipeline line-by-line test
+    """
+    # Get search result
+    organic_results = get_search_results(page=1)
 
-# 2 - fetch profile info using API
+    # Get profile links
+    profile_list = [r.get("link") for r in organic_results if r.get("link")]
 
+    # Get profile info
+    all_profiles = []
+    profile_info = get_profile_info(profile_list[2])
+    
+    all_profiles.append(profile_info)
+    # Export
+    save_json([profile_info], "output/linkedin_profile_dataset_test.json")
 
-#
-#
-# III - Get profil info 
-#
-# 
+    
+def main():
+    all_profiles = []
 
-import requests
+    for i in range(PAGE_RANGE):
+        try:
+            results = get_search_results(page=i + 1)
 
-url = "https://piloterr.com/api/v2/linkedin/advanced/profile/info"
+            for result in results:
+                link = result.get('link')
+                if link:
+                    try:
+                        profile_data = get_profile_info(link)
+                        all_profiles.append(profile_data)
+                        
+                    except Exception as e:
+                        print(f"Error fetching profile info: {e}")
+                        
+        except Exception as e:
+            print(f"Exception during search: {e}")
 
-headers = {
-    "x-api-key": x_api_key
-}
+    save_json(all_profiles, "output/linkedin_profile_dataset.json")
+    return all_profiles
 
-querystring = {"query" : profil_link} 
-
-response = requests.request("GET", url, headers=headers, params=querystring)
-
-print(f"3) sample profile link : {response.json()}")
-
-#
-#
-# IV - LOOP process - merge data
-#
-# 
-
-
-
-
-
-
-
-
-
+# Appel du pipeline
+if __name__ == "__main__":
+    main()
