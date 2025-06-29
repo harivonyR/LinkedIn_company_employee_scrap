@@ -12,10 +12,15 @@ import json
 import requests
 from credential import x_api_key
 
-# Global vars
-X_API_KEY = x_api_key
-PAGE_RANGE = 2
-COMPANY = "Apple Inc."
+# API KEY
+X_API_KEY = x_api_key          # valid api key from piloterr.com
+
+COMPANY = "Apple Inc."         # Campany name on LinkedIn
+
+PAGE_RANGE = 2                 # number of google search page to scrape
+LIMIT = 20                     # limit of result (link) to scrape on each page
+
+
 
 def get_search_results(page=1, company=COMPANY, organic_results=True):
     """
@@ -26,7 +31,8 @@ def get_search_results(page=1, company=COMPANY, organic_results=True):
     
     payload = {
         "query": f"intext:\'{company}\' inurl:in site:linkedin.com -inurl:posts",
-        "page": page
+        "page": page,
+        "num" : LIMIT
     }
     headers = {
         "x-api-key": X_API_KEY,
@@ -58,7 +64,7 @@ def save_json(data, output_path):
 
 def test():
     """
-    Pipeline line-by-line test
+    Pipeline function test (Optional)
     """
     # Get search result
     organic_results = get_search_results(page=2)
@@ -80,14 +86,14 @@ def main():
 
     for i in range(PAGE_RANGE):
         
-        print(f"Page : {i+1}")                             # debug    
+        print(f"Page : {i+1}")                            
         try:
             results = get_search_results(page=i + 1)
 
             for result in results:
                 
                 link = result.get('link')
-                print(f"link : {link}")                    # debug
+                print(f"link : {link}")                   
                 
                 if link:
                     try:
@@ -103,6 +109,6 @@ def main():
     save_json(all_profiles, "output/linkedin_profile_dataset.json")
     return all_profiles
 
-# Appel du pipeline
+# run pipeline
 if __name__ == "__main__":
     all_profiles = main()
